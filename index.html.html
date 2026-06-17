@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>ANAGES Canlı Senkronize Panel</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; display: flex; gap: 20px; height: 95vh; box-sizing: border-box; }
+        .sol-panel { width: 22%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; height: fit-content; }
+        .sag-panel { width: 78%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-y: auto; display: flex; flex-direction: column; }
+        h2 { color: #800000; margin-top: 0; border-bottom: 2px solid #800000; padding-bottom: 10px; font-size: 18px; }
+        .durum-kartı { background: #eef2f7; padding: 12px; border-left: 5px solid green; border-radius: 4px; font-size: 13px; font-weight: bold; color: green; }
+        
+        .takvim-grubu { display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6; }
+        .takvim-grubu label { font-size: 11px; font-weight: bold; color: #495057; }
+        .takvim-input { width: 90%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; font-weight: bold; font-family: inherit; }
+
+        .ozet-blok { display: flex; gap: 20px; margin-bottom: 15px; }
+        .kutu-grubu { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .ozet-kutular { display: flex; gap: 10px; flex-wrap: wrap; }
+        .alan { flex: 1; min-width: 100px; padding: 10px; border-radius: 6px; text-align: center; font-weight: bold; font-size: 11px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); cursor: pointer; transition: all 0.2s ease; user-select: none; }
+        .alan:hover { transform: translateY(-3px); box-shadow: 0 5px 12px rgba(0,0,0,0.1); opacity: 0.9; }
+        
+        .al-yeşil { background: #c8e6c9; color: #1b5e20; border: 1px solid #a5d6a7; }
+        .al-sarı { background: #fff9c4; color: #f57f17; border: 1px solid #fff59d; }
+        .al-kırmızı { background: #ffcdd2; color: #b71c1c; border: 1px solid #ef9a9a; }
+        .al-mavi { background: #bbdefb; color: #0d47a1; border: 1px solid #90caf9; }
+
+        .alan span { display: block; font-size: 24px; font-weight: bold; margin-top: 5px; }
+
+        .alt-toplam-paneli { padding: 12px; border-radius: 6px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .toplam-sabah { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+        .toplam-akşam { background: #eceff1; color: #37474f; border: 1px solid #cfd8dc; }
+        .alt-toplam-paneli span { font-size: 22px; font-weight: bold; }
+
+        .tablo-alani { flex: 1; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 12px; }
+        th { background: #800000; color: white; position: sticky; top: 0; z-index: 10; }
+        
+        tr.sabah-zamaninda td { background-color: #c8e6c9 !important; color: #1b5e20 !important; font-weight: bold; }
+        tr.sabah-sinirda td { background-color: #fff9c4 !important; color: #f57f17 !important; font-weight: bold; }
+        tr.sabah-gec td { background-color: #ffcdd2 !important; color: #b71c1c !important; font-weight: bold; }
+        tr.ogle-cikis td { background-color: #bbdefb !important; color: #0d47a1 !important; font-weight: bold; }
+        tr.ogle-donus td { background-color: #fff9c4 !important; color: #f57f17 !important; font-weight: bold; }
+        tr.aksam-paydos td { background-color: #ffcdd2 !important; color: #b71c1c !important; font-weight: bold; }
+        
+        .aktif-filtre { border: 2px solid #333 !important; transform: scale(1.02); }
+        .not-input { width: 95%; padding: 4px; border: 1px solid rgba(0,0,0,0.15); border-radius: 4px; background: rgba(255,255,255,0.7); font-size: 11px; font-weight: bold; font-family: inherit; color: inherit; }
+        .not-input:focus { background: #fff; border: 1px solid #800000; outline: none; }
+
+        .btn-panel { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .kullanici-btn { padding: 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+        .btn-liste { background: #800000; }
+        .btn-liste:hover { background: #a01a1a; }
+        .btn-yazici { background: #37474f; }
+        .btn-yazici:hover { background: #4f5b62; }
+        .btn-sifirla { background: #d32f2f; }
+        .btn-sifirla:hover { background: #b71c1c; }
+
+        @media print {
+            body { background: white; padding: 0; margin: 0; display: block; height: auto; }
+            .sol-panel, .ozet-blok, h2, th { position: static !important; }
+            .sol-panel, .ozet-blok, .btn-panel, .takvim-grubu { display: none !important; }
+            .sag-panel { width: 100% !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
+            .tablo-alani { overflow: visible !important; }
+            table { border: 1px solid #000; }
+            th { background: #f0f0f0 !important; color: #000 !important; border-bottom: 2px solid #000; }
+            td { border-bottom: 1px solid #000; }
+            tr td { background-color: transparent !important; color: #000 !important; }
+            .not-input { border: none !important; background: transparent !important; padding: 0 !important; width: 100% !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sol-panel">
+        <h2>SBF İDARİ PERSONEL MESAİ TAKİP</h2>
+        <div class="durum-kartı" id="status">Sistem Durumu: Bağlı 🟢</div>
+        
+        <div class="takvim-grubu">
+            <label>📅 BAŞLANGIÇ TARİHİ</label>
+            <input type="date" id="basTarih" class="takvim-input" onchange="tabloyuOlustur(globalVeriHavuzu)">
+            <label>📅 BİTİŞ TARİHİ</label>
+            <input type="date" id="bitTarih" class="takvim-input" onchange="tabloyuOlustur(globalVeriHavuzu)">
+        </div>
+
+        <p style="font-size: 12px; color: #555; line-height: 1.5; margin: 0;">ANAGES'te istediğin kadar sayfada gezebilirsin moruk, veriler üst üste birikir. Takvimden tarih aralığı seçerek süzebilirsin.</p>
+        
+        <div class="btn-panel">
+            <button class="kullanici-btn btn-liste" onclick="filtrele('HEPSİ', this)">🔍 Tüm Listeyi Göster</button>
+            <button class="kullanici-btn btn-yazici" onclick="window.print()">🖨️ Seçili Ekranı Yazdır</button>
+            <button class="kullanici-btn btn-sifirla" onclick="havuzuTemizle()">🗑️ Sonsuz Havuzu Sıfırla</button>
+        </div>
+    </div>
+
+    <div class="sag-panel">
+        <h2>Personel Giriş/Çıkış Hareketleri (Mesai Analizli)</h2>
+        
+        <div class="ozet-blok">
+            <div class="kutu-grubu">
+                <div class="ozet-kutular">
+                    <div class="alan al-yeşil" onclick="filtrele('SABAH_ZAMANINDA', this)">08:30 ve Öncesi <span id="sZamanindaSay">0</span></div>
+                    <div class="alan al-sarı" onclick="filtrele('SABAH_SINIRDA', this)">08:31 - 08:44 Arası <span id="sSinirdaSay">0</span></div>
+                    <div class="alan al-kırmızı" onclick="filtrele('SABAH_GEC', this)">08:45 Sonrası Giriş <span id="sGecSay">0</span></div>
+                </div>
+                <div class="alt-toplam-paneli toplam-sabah">
+                    <div>☀️ Sabah Giriş Yapan Toplam Personel:</div>
+                    <span id="toplamSabahSay">0</span>
+                </div>
+            </div>
+
+            <div class="kutu-grubu">
+                <div class="ozet-kutular">
+                    <div class="alan al-mavi" onclick="filtrele('OGLE_CIKIS', this)">Öğle Çıkış (12:00) <span id="oCikisSay">0</span></div>
+                    <div class="alan al-sarı" onclick="filtrele('OGLE_DONUS', this)">Öğle Dönüş (13:00) <span id="oDonusSay">0</span></div>
+                    <div class="alan al-kırmızı" onclick="filtrele('AKSAM_PAYDOS', this)">Akşam Paydos (17:30) <span id="aPaydosSay">0</span></div>
+                </div>
+                <div class="alt-toplam-paneli toplam-akşam">
+                    <div>🌙 Akşam Çıkış Yapan Toplam Personel:</div>
+                    <span id="toplamAksamSay">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tablo-alani">
+            <table>
+                <thead>
+                    <tr>
+                        <th>TCKN</th>
+                        <th>Ad Soyad</th>
+                        <th>Zaman</th>
+                        <th>Konum</th>
+                        <th>Yön</th>
+                        <th>Mesaiye Geç Kalma Nedeni </th>
+                    </tr>
+                </thead>
+                <tbody id="canliGövde">
+                    <tr><td colspan="6" style="text-align:center; color:#888;">Veriler senkronize ediliyor moruk...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let aktifFiltreTipi = "HEPSİ";
+        let globalVeriHavuzu = [];
+        let yazmaModuAktif = false;
+        let yazilanNotlar = JSON.parse(localStorage.getItem("anages_idari_notlar")) || {};
+
+        window.onload = function() {
+            const bugün = new Date().toISOString().split('T')[0];
+            document.getElementById('basTarih').value = bugün;
+            document.getElementById('bitTarih').value = bugün;
+        };
+
+        function filtrele(tip, element) {
+            aktifFiltreTipi = tip;
+            document.querySelectorAll('.alan').forEach(kutu => kutu.classList.remove('aktif-filtre'));
+            if(element && tip !== 'HEPSİ') {
+                element.classList.add('aktif-filtre');
+            }
+            tabloyuOlustur(globalVeriHavuzu);
+        }
+
+        function notKaydet(anahtar, deger) {
+            yazilanNotlar[anahtar] = deger;
+            localStorage.setItem("anages_idari_notlar", JSON.stringify(yazilanNotlar));
+        }
+
+        async function havuzuTemizle() {
+            if(confirm("Sonsuz veri havuzunu tamamen boşaltmak istediğine emin misin moruk?")) {
+                try {
+                    await fetch('http://10.12.176.105:5000/api/sifirla', { method: 'POST' });
+                    globalVeriHavuzu = [];
+                    tabloyuOlustur([]);
+                } catch(e) {
+                    alert("Sıfırlama esnasında arka plan motoruna ulaşılamadı moruk!");
+                }
+            }
+        }
+
+        async function verileriEkranaBas() {
+            if (yazmaModuAktif) return;
+
+            let data = [];
+            try {
+                const res = await fetch('http://10.12.176.105:5000/api/canli', {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                data = await res.json();
+            } catch (e) {
+                console.log("Arayuz veri cekme hatasi moruk");
+            }
+
+            if (!data || data.length === 0) return;
+
+            data.sort((a, b) => {
+                const saatA = a.zaman.match(/(\d{2})[:.](\d{2})([:.]\d{2})?/);
+                const saatB = b.zaman.match(/(\d{2})[:.](\d{2})([:.]\d{2})?/);
+                if (saatA && saatB) {
+                    const dakA = parseInt(saatA[1], 10) * 60 + parseInt(saatA[2], 10);
+                    const dakB = parseInt(saatB[1], 10) * 60 + parseInt(saatB[2], 10);
+                    return dakA - dakB;
+                }
+                return 0;
+            });
+
+            globalVeriHavuzu = data;
+            tabloyuOlustur(globalVeriHavuzu);
+        }
+
+        function tarihNesnesiYap(zamanStr) {
+            if(!zamanStr) return null;
+            const parca = zamanStr.trim().split(" ")[0];
+            const d = parca.split(/[.-]/);
+            if(d.length === 3) {
+                let yil = parseInt(d[2], 10);
+                let ay = parseInt(d[1], 10) - 1;
+                let gun = parseInt(d[0], 10);
+                if (d[0].length === 4) {
+                    yil = parseInt(d[0], 10);
+                    gun = parseInt(d[2], 10);
+                }
+                return new Date(yil, ay, gun);
+            }
+            return null;
+        }
+
+        function tabloyuOlustur(data) {
+            const tbody = document.getElementById('canliGövde');
+            tbody.innerHTML = '';
+            
+            const basSecim = document.getElementById('basTarih').value;
+            const bitSecim = document.getElementById('bitTarih').value;
+            
+            let baslikTarihi = basSecim ? new Date(basSecim + "T00:00:00") : null;
+            let bitisTarihi = bitSecim ? new Date(bitSecim + "T23:59:59") : null;
+
+            let sz = 0, ss = 0, sg = 0, oc = 0, od = 0, ap = 0;
+
+            // AKILLI ÖĞLE SÜZGEÇ TAKİP BELLEKLERİ moruk
+            let sonBasilanZaman = {}; 
+            let ogleKusagiKişiSayacı = {}; 
+
+            data.forEach(item => {
+                const veriTarihi = tarihNesnesiYap(item.zaman);
+                if (baslikTarihi && bitisTarihi && veriTarihi) {
+                    veriTarihi.setHours(0,0,0,0);
+                    let checkBas = new Date(baslikTarihi); checkBas.setHours(0,0,0,0);
+                    let checkBit = new Date(bitisTarihi); checkBit.setHours(0,0,0,0);
+                    if (veriTarihi < checkBas || veriTarihi > checkBit) {
+                        return;
+                    }
+                }
+
+                const saatBul = item.zaman.match(/(\d{2})[:.](\d{2})/);
+                let sinif = "";
+                let grup = "";
+                
+                if (saatBul) {
+                    const saat = parseInt(saatBul[1], 10);
+                    const dakika = parseInt(saatBul[2], 10);
+                    const toplam = (saat * 60) + dakika;
+                    
+                    // 1) PEŞ PEŞE ÇİFT BASMA (MÜKERRER) FİLTRESİ moruk
+                    // Aynı personel 3 dakika içinde peş peşe basmışsa sonraki basışları yok say
+                    if (sonBasilanZaman[item.tckn] !== undefined) {
+                        if (Math.abs(toplam - sonBasilanZaman[item.tckn]) <= 3) {
+                            return; 
+                        }
+                    }
+                    sonBasilanZaman[item.tckn] = toplam;
+
+                    if (toplam <= (11 * 60)) {
+                        if (toplam <= (8 * 60) + 30) {
+                            sinif = "sabah-zamaninda";
+                            grup = "SABAH_ZAMANINDA";
+                            sz++;
+                        } else if (toplam <= (8 * 60) + 44) {
+                            sinif = "sabah-sinirda";
+                            grup = "SABAH_SINIRDA";
+                            ss++;
+                        } else {
+                            sinif = "sabah-gec";
+                            grup = "SABAH_GEC";
+                            sg++;
+                        }
+                    } 
+                    // 2) KİŞİ BAZLI AKILLI ÖĞLE SÜZGEÇ MOTORU moruk
+                    else if (toplam >= (11 * 60) + 45 && toplam <= (13 * 60) + 30) {
+                        if (ogleKusagiKişiSayacı[item.tckn] === undefined) {
+                            // Kişinin o gün öğle vaktindeki İLK basışı kesinlikle Öğle Çıkıştır!
+                            ogleKusagiKişiSayacı[item.tckn] = 1;
+                            sinif = "ogle-cikis";
+                            grup = "OGLE_CIKIS";
+                            oc++;
+                        } else {
+                            // Kişinin öğle vaktindeki İKİNCİ basışı kesinlikle Öğle Dönüştür!
+                            sinif = "ogle-donus";
+                            grup = "OGLE_DONUS";
+                            od++;
+                        }
+                    } else if (toplam <= (15 * 60) + 30) {
+                        sinif = "ogle-donus";
+                        grup = "OGLE_DONUS";
+                        od++;
+                    } else {
+                        sinif = "aksam-paydos";
+                        grup = "AKSAM_PAYDOS";
+                        ap++;
+                    }
+                }
+
+                if (aktifFiltreTipi === "HEPSİ" || aktifFiltreTipi === grup) {
+                    const tr = document.createElement('tr');
+                    tr.className = sinif;
+                    
+                    const notAnahtarı = item.tckn + "_" + item.zaman.replace(/[:.\s-]/g, "");
+                    const mevcutNot = yazilanNotlar[notAnahtarı] !== undefined ? yazilanNotlar[notAnahtarı] : "";
+
+                    tr.innerHTML = `<td>${item.tckn}</td>
+                                    <td>${item.adSoyad}</td>
+                                    <td>${item.zaman}</td>
+                                    <td>${item.konum}</td>
+                                    <td>${item.yon}</td>
+                                    <td><input type="text" id="${notAnahtarı}" class="not-input" value="${mevcutNot}" onfocus="yazmaModuAktif=true" onblur="yazmaModuAktif=false" oninput="notKaydet('${notAnahtarı}', this.value)"></td>`;
+                    tbody.appendChild(tr);
+                }
+            });
+
+            document.getElementById('sZamanindaSay').innerText = sz;
+            document.getElementById('sSinirdaSay').innerText = ss;
+            document.getElementById('sGecSay').innerText = sg;
+            document.getElementById('oCikisSay').innerText = oc;
+            document.getElementById('oDonusSay').innerText = od;
+            document.getElementById('aPaydosSay').innerText = ap;
+
+            document.getElementById('toplamSabahSay').innerText = sz + ss + sg;
+            document.getElementById('toplamAksamSay').innerText = oc + od + ap;
+
+            if(tbody.children.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888; font-weight:bold;">Seçilen takvim aralığında veya filtrede kart verisi bulunmuyor moruk.</td></tr>`;
+            }
+        }
+
+        setInterval(verileriEkranaBas, 3000);
+        verileriEkranaBas();
+    </script>
+</body>
+</html>
