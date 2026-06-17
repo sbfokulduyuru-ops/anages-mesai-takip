@@ -145,7 +145,7 @@
         let aktifFiltreTipi = "HEPSİ";
         let globalVeriHavuzu = [];
         let yazmaModuAktif = false;
-        let yazilanNotlar = JSON.parse(localStorage.getItem("anages_idari_notlar")) || {};
+        let globalNotHavuzu = {}; // Arka plandan gelecek ortak not deposu moruk
 
         window.onload = function() {
             const bugün = new Date().toISOString().split('T')[0];
@@ -162,9 +162,18 @@
             tabloyuOlustur(globalVeriHavuzu);
         }
 
-        function notKaydet(anahtar, deger) {
-            yazilanNotlar[anahtar] = deger;
-            localStorage.setItem("anages_idari_notlar", JSON.stringify(yazilanNotlar));
+        // Notu artık yerel tarayıcıya değil, doğrudan senin bilgisayardaki Python motoruna gönderip kaydeden asil fonksiyon moruk!
+        async function notKaydet(anahtar, deger) {
+            globalNotHavuzu[anahtar] = deger;
+            try {
+                await fetch('http://10.12.176.105:5000/api/not_kaydet', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({anahtar: anahtar, deger: deger})
+                });
+            } catch(e) {
+                print("Not sunucuya iletilemedi moruk");
+            }
         }
 
         async function havuzuTemizle() {
@@ -172,6 +181,7 @@
                 try {
                     await fetch('http://10.12.176.105:5000/api/sifirla', { method: 'POST' });
                     globalVeriHavuzu = [];
+                    globalNotHavuzu = {};
                     tabloyuOlustur([]);
                 } catch(e) {
                     alert("Sıfırlama esnasında arka plan motoruna ulaşılamadı moruk!");
@@ -182,21 +192,24 @@
         async function verileriEkranaBas() {
             if (yazmaModuAktif) return;
 
-            let data = [];
             try {
                 const res = await fetch('http://10.12.176.105:5000/api/canli', {
                     method: 'GET',
                     mode: 'cors',
                     credentials: 'omit'
                 });
-                data = await res.json();
+                const paket = await res.json();
+                
+                // Gelen paketten hem verileri hem ortak notları ayıklıyoruz moruk
+                globalVeriHavuzu = paket.veriler || [];
+                globalNotHavuzu = paket.notlar || {};
             } catch (e) {
                 console.log("Arayuz veri cekme hatasi moruk");
             }
 
-            if (!data || data.length === 0) return;
+            if (!globalVeriHavuzu || globalVeriHavuzu.length === 0) return;
 
-            data.sort((a, b) => {
+            globalVeriHavuzu.sort((a, b) => {
                 const saatA = a.zaman.match(/(\d{2})[:.](\d{2})([:.]\d{2})?/);
                 const saatB = b.zaman.match(/(\d{2})[:.](\d{2})([:.]\d{2})?/);
                 if (saatA && saatB) {
@@ -207,7 +220,6 @@
                 return 0;
             });
 
-            globalVeriHavuzu = data;
             tabloyuOlustur(globalVeriHavuzu);
         }
 
@@ -240,7 +252,6 @@
 
             let sz = 0, ss = 0, sg = 0, oc = 0, od = 0, ap = 0;
 
-            // AKILLI ÖĞLE SÜZGEÇ TAKİP BELLEKLERİ moruk
             let sonBasilanZaman = {}; 
             let ogleKusagiKişiSayacı = {}; 
 
@@ -264,12 +275,8 @@
                     const dakika = parseInt(saatBul[2], 10);
                     const toplam = (saat * 60) + dakika;
                     
-                    // 1) PEŞ PEŞE ÇİFT BASMA (MÜKERRER) FİLTRESİ moruk
-                    // Aynı personel 3 dakika içinde peş peşe basmışsa sonraki basışları yok say
-                    if (sonBasilanZaman[item.tckn] !== undefined) {
-                        if (Math.abs(toplam - sonBasilanZaman[item.tckn]) <= 3) {
-                            return; 
-                        }
+                    if (sonBasilanZaman[item.tckn] !== undefined && Math.abs(toplam - sonBasilanZaman[item.tckn]) <= 3) {
+                        return; 
                     }
                     sonBasilanZaman[item.tckn] = toplam;
 
@@ -288,16 +295,13 @@
                             sg++;
                         }
                     } 
-                    // 2) KİŞİ BAZLI AKILLI ÖĞLE SÜZGEÇ MOTORU moruk
                     else if (toplam >= (11 * 60) + 45 && toplam <= (13 * 60) + 30) {
                         if (ogleKusagiKişiSayacı[item.tckn] === undefined) {
-                            // Kişinin o gün öğle vaktindeki İLK basışı kesinlikle Öğle Çıkıştır!
                             ogleKusagiKişiSayacı[item.tckn] = 1;
                             sinif = "ogle-cikis";
                             grup = "OGLE_CIKIS";
                             oc++;
                         } else {
-                            // Kişinin öğle vaktindeki İKİNCİ basışı kesinlikle Öğle Dönüştür!
                             sinif = "ogle-donus";
                             grup = "OGLE_DONUS";
                             od++;
@@ -318,7 +322,8 @@
                     tr.className = sinif;
                     
                     const notAnahtarı = item.tckn + "_" + item.zaman.replace(/[:.\s-]/g, "");
-                    const mevcutNot = yazilanNotlar[notAnahtarı] !== undefined ? yazilanNotlar[notAnahtarı] : "";
+                    // Notu yerel hafızadan değil, Python ortak havuzundan anlık çekip yazıyoruz moruk!
+                    const mevcutNot = globalNotHavuzu[notAnahtarı] !== undefined ? globalNotHavuzu[notAnahtarı] : "";
 
                     tr.innerHTML = `<td>${item.tckn}</td>
                                     <td>${item.adSoyad}</td>
