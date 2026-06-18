@@ -10,7 +10,6 @@
         h2 { color: #800000; margin-top: 0; border-bottom: 2px solid #800000; padding-bottom: 10px; font-size: 18px; }
         .durum-kartı { background: #eef2f7; padding: 12px; border-left: 5px solid green; border-radius: 4px; font-size: 13px; font-weight: bold; color: green; }
         
-        /* CANLI SAAT PANELİ STİLİ moruk */
         .canli-saat-paneli { background: #fff3e0; border: 1px solid #ffe0b2; padding: 10px; border-radius: 6px; text-align: center; font-size: 14px; font-weight: bold; color: #e65100; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
 
         .takvim-grubu { display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6; }
@@ -31,10 +30,10 @@
         .al-eflatun { background: #f3e5f5; color: #4a148c; border: 1px solid #e1bee7; }
 
         .alan span { display: block; font-size: 24px; font-weight: bold; margin-top: 5px; }
-        .alt-toplam-paneli { padding: 12px; border-radius: 6px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .alt-topham-paneli { padding: 12px; border-radius: 6px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .toplam-sabah { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
         .toplam-akşam { background: #f3e5f5; color: #4a148c; border: 1px solid #e1bee7; }
-        .alt-toplam-paneli span { font-size: 22px; font-weight: bold; }
+        .alt-topham-paneli span { font-size: 22px; font-weight: bold; }
 
         .tablo-alani { flex: 1; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; }
@@ -54,6 +53,8 @@
 
         .btn-panel { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
         .kullanici-btn { padding: 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+        .btn-guncelle { background: #2e7d32; } /* Yeşillendi moruk */
+        .btn-guncelle:hover { background: #1b5e20; }
         .btn-liste { background: #800000; }
         .btn-liste:hover { background: #a01a1a; }
         .btn-yazici { background: #37474f; }
@@ -80,7 +81,6 @@
         <h2>SBF İDARİ PERSONEL MESAİ TAKİP</h2>
         <div class="durum-kartı" id="status">Sistem Durumu: Bağlı 🟢</div>
         
-        <!-- ⏰ YENİ CANLI SAAT VE GÜN ALANI moruk -->
         <div class="canli-saat-paneli" id="canliZamanAyraci">Yükleniyor...</div>
         
         <div class="takvim-grubu">
@@ -93,9 +93,11 @@
         <p style="font-size: 12px; color: #555; line-height: 1.5; margin: 0;">SBF Bilgi İşlem Birimi-2026 Tüm Hakları Saklıdır.</p>
         
         <div class="btn-panel">
+            <!-- 🔄 YENİ ANLIK GÜNCELLEME / SENKRONİZE BUTONU  -->
+            <button class="kullanici-btn btn-guncelle" onclick="verileriEkranaBas(true)">🔄 Şimdi Senkronize Et</button>
             <button class="kullanici-btn btn-liste" onclick="filtrele('HEPSİ', this)">🔍 Tüm Listeyi Göster</button>
             <button class="kullanici-btn btn-yazici" onclick="window.print()">🖨️ Seçili Ekranı Yazdır</button>
-            <button class="kullanici-btn btn-sifirla" onclick="havuzuTemizle()">🗑️ Sonsuz Havuzu Sıfırla</button>
+            <button class="kullanici-btn btn-sifirla" onclick="havuzuTemizle()">🗑️ Tüm Listeleri Sıfırla</button>
         </div>
     </div>
 
@@ -109,7 +111,7 @@
                     <div class="alan al-sarı" onclick="filtrele('SABAH_SINIRDA', this)">08:31 - 08:44 Arası <span id="sSinirdaSay">0</span></div>
                     <div class="alan al-kırmızı" onclick="filtrele('SABAH_GEC', this)">08:45 Sonrası Giriş <span id="sGecSay">0</span></div>
                 </div>
-                <div class="alt-toplam-paneli toplam-sabah">
+                <div class="alt-topham-paneli toplam-sabah">
                     <div>☀️ Sabah Giriş Yapan Toplam Personel:</div>
                     <span id="toplamSabahSay">0</span>
                 </div>
@@ -121,7 +123,7 @@
                     <div class="alan al-turkuaz" onclick="filtrele('OGLE_DONUS', this)">Öğle Dönüş (13:00) <span id="oDonusSay">0</span></div>
                     <div class="alan al-eflatun" onclick="filtrele('AKSAM_PAYDOS', this)">Akşam Paydos (17:30) <span id="aPaydosSay">0</span></div>
                 </div>
-                <div class="alt-toplam-paneli toplam-akşam">
+                <div class="alt-topham-paneli toplam-akşam">
                     <div>🌙 Akşam Çıkış Yapan Toplam Personel:</div>
                     <span id="toplamAksamSay">0</span>
                 </div>
@@ -155,7 +157,6 @@
         let yazmaModuAktif = false;
         let yazilanNotlar = JSON.parse(localStorage.getItem("anages_idari_notlar")) || {};
 
-        // ⏰ CANLI SAAT VE GÜN GÜNCELLEME MOTORU moruk
         function zamaniCanliGuncelle() {
             const gunler = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
             const simdi = new Date();
@@ -178,7 +179,6 @@
             document.getElementById('bitTarih').value = bugün;
             verileriEkranaBas();
             
-            // Saati milisaniyelik hassasiyetle başlatıp saniyede bir döndürüyoruz moruk
             zamaniCanliGuncelle();
             setInterval(zamaniCanliGuncelle, 1000);
         };
@@ -210,8 +210,9 @@
             }
         }
 
-        async function verileriEkranaBas() {
-            if (yazmaModuAktif) return;
+        // Butona tıklandığında zorunlu çekim yapabilmesi için el_ile parametresi ekledik moruk
+        async function verileriEkranaBas(el_ile = false) {
+            if (yazmaModuAktif && !el_ile) return;
             const statusCard = document.getElementById('status');
 
             let data = [];
@@ -225,6 +226,11 @@
                 statusCard.innerText = "Sistem Durumu: Bağlı 🟢";
                 statusCard.style.color = "green";
                 statusCard.style.borderLeftColor = "green";
+                
+                if (el_ile) {
+                    statusCard.innerText = "Sistem Durumu: Senkronize Edildi! ⚡";
+                    setTimeout(() => { statusCard.innerText = "Sistem Durumu: Bağlı 🟢"; }, 2000);
+                }
             } catch (e) {
                 console.log("Arayuz veri cekme hatasi moruk");
                 statusCard.innerText = "Sistem Durumu: Motora Bağlanamadı! 🔴";
@@ -381,7 +387,8 @@
             }
         }
 
-        setInterval(verileriEkranaBas, 3000);
+        // Arka plandaki otomatik döngü 3 saniyede bir yine yoklasın ama sen yazarken araya girmesin moruk
+        setInterval(() => { verileriEkranaBas(false); }, 3000);
     </script>
 </body>
 </html>
