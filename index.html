@@ -20,18 +20,15 @@
         .alan { flex: 1; min-width: 100px; padding: 10px; border-radius: 6px; text-align: center; font-weight: bold; font-size: 11px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); cursor: pointer; transition: all 0.2s ease; user-select: none; border: 1px solid transparent; }
         .alan:hover { transform: translateY(-3px); box-shadow: 0 5px 12px rgba(0,0,0,0.1); opacity: 0.9; }
         
-        /* SABAH GİRİŞ RENKLERİ */
+        /* RENKLER */
         .al-yeşil { background: #c8e6c9; color: #1b5e20; border: 1px solid #a5d6a7; }
         .al-sarı { background: #fff9c4; color: #f57f17; border: 1px solid #fff59d; }
         .al-kırmızı { background: #ffcdd2; color: #b71c1c; border: 1px solid #ef9a9a; }
-        
-        /* ÖĞLE VE AKŞAM KUŞAĞININ KARIŞMAYAN YENİ RENKLERİ moruk */
         .al-mavi { background: #bbdefb; color: #0d47a1; border: 1px solid #90caf9; }
         .al-turkuaz { background: #e0f7fa; color: #006064; border: 1px solid #b2ebf2; }
         .al-eflatun { background: #f3e5f5; color: #4a148c; border: 1px solid #e1bee7; }
 
         .alan span { display: block; font-size: 24px; font-weight: bold; margin-top: 5px; }
-
         .alt-toplam-paneli { padding: 12px; border-radius: 6px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .toplam-sabah { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
         .toplam-akşam { background: #f3e5f5; color: #4a148c; border: 1px solid #e1bee7; }
@@ -42,7 +39,6 @@
         th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 12px; }
         th { background: #800000; color: white; position: sticky; top: 0; z-index: 10; }
         
-        /* TABLO SATIR RENKLENDİRMELERİ moruk */
         tr.sabah-zamaninda td { background-color: #c8e6c9 !important; color: #1b5e20 !important; font-weight: bold; }
         tr.sabah-sinirda td { background-color: #fff9c4 !important; color: #f57f17 !important; font-weight: bold; }
         tr.sabah-gec td { background-color: #ffcdd2 !important; color: #b71c1c !important; font-weight: bold; }
@@ -62,19 +58,6 @@
         .btn-yazici:hover { background: #4f5b62; }
         .btn-sifirla { background: #d32f2f; }
         .btn-sifirla:hover { background: #b71c1c; }
-
-        @media print {
-            body { background: white; padding: 0; margin: 0; display: block; height: auto; }
-            .sol-panel, .ozet-blok, h2, th { position: static !important; }
-            .sol-panel, .ozet-blok, .btn-panel, .takvim-grubu { display: none !important; }
-            .sag-panel { width: 100% !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
-            .tablo-alani { overflow: visible !important; }
-            table { border: 1px solid #000; }
-            th { background: #f0f0f0 !important; color: #000 !important; border-bottom: 2px solid #000; }
-            td { border-bottom: 1px solid #000; }
-            tr td { background-color: transparent !important; color: #000 !important; }
-            .not-input { border: none !important; background: transparent !important; padding: 0 !important; width: 100% !important; }
-        }
     </style>
 </head>
 <body>
@@ -148,7 +131,7 @@
     </div>
 
     <script>
-        const PYTHON_SUNUCU_URL = "http://192.168.0.108:5000";
+        const PYTHON_SUNUCU_URL = "http://10.12.176.105:5000";
 
         let aktifFiltreTipi = "HEPSİ";
         let globalVeriHavuzu = [];
@@ -228,10 +211,28 @@
             tabloyuOlustur(globalVeriHavuzu);
         }
 
+        // 🎯 TARİH ENGELİNİ PARÇALAYAN ULTRA AKILLI FONKSİYON moruk
         function tarihNesnesiYap(zamanStr) {
             if(!zamanStr) return null;
-            const parca = zamanStr.trim().split(" ")[0];
-            const d = parca.split(/[.-]/);
+            
+            const temizStr = zamanStr.trim().split(" ")[0]; 
+            const ingAylar = {"jan":0,"feb":1,"mar":2,"apr":3,"may":4,"jun":5,"jul":6,"aug":7,"sep":8,"oct":9,"nov":10,"dec":11};
+            
+            // Eğer ANAGES'ten 18/Jun/2026 gibi geliyorsa nizamîce ayıkla moruk
+            if (temizStr.includes("/")) {
+                const p = temizStr.split("/");
+                if (p.length === 3) {
+                    const g = parseInt(p[0], 10);
+                    const ayYazi = p[1].toLowerCase().substring(0, 3);
+                    const y = parseInt(p[2], 10);
+                    if (ingAylar[ayYazi] !== undefined) {
+                        return new Date(y, ingAylar[ayYazi], g);
+                    }
+                }
+            }
+            
+            // Klasik nokta veya tireli format için yedek hat
+            const d = temizStr.split(/[.-]/);
             if(d.length === 3) {
                 let yil = parseInt(d[2], 10);
                 let ay = parseInt(d[1], 10) - 1;
@@ -256,7 +257,6 @@
             let bitisTarihi = bitSecim ? new Date(bitSecim + "T23:59:59") : null;
 
             let sz = 0, ss = 0, sg = 0, oc = 0, od = 0, ap = 0;
-
             let sonBasilanZaman = {}; 
             let ogleKusagiKişiSayacı = {}; 
 
@@ -293,38 +293,24 @@
 
                     if (toplam <= (11 * 60)) {
                         if (toplam <= (8 * 60) + 30) {
-                            sinif = "sabah-zamaninda";
-                            grup = "SABAH_ZAMANINDA";
-                            sz++;
+                            sinif = "sabah-zamaninda"; grup = "SABAH_ZAMANINDA"; sz++;
                         } else if (toplam <= (8 * 60) + 44) {
-                            sinif = "sabah-sinirda";
-                            grup = "SABAH_SINIRDA";
-                            ss++;
+                            sinif = "sabah-sinirda"; grup = "SABAH_SINIRDA"; ss++;
                         } else {
-                            sinif = "sabah-gec";
-                            grup = "SABAH_GEC";
-                            sg++;
+                            sinif = "sabah-gec"; grup = "SABAH_GEC"; sg++;
                         }
                     } 
                     else if (toplam >= (11 * 60) + 45 && toplam <= (13 * 60) + 30) {
                         if (ogleKusagiKişiSayacı[item.tckn] === undefined) {
                             ogleKusagiKişiSayacı[item.tckn] = 1;
-                            sinif = "ogle-cikis";
-                            grup = "OGLE_CIKIS";
-                            oc++;
+                            sinif = "ogle-cikis"; grup = "OGLE_CIKIS"; oc++;
                         } else {
-                            sinif = "ogle-donus";
-                            grup = "OGLE_DONUS";
-                            od++;
+                            sinif = "ogle-donus"; grup = "OGLE_DONUS"; od++;
                         }
                     } else if (toplam <= (15 * 60) + 30) {
-                        sinif = "ogle-donus";
-                        grup = "OGLE_DONUS";
-                        od++;
+                        sinif = "ogle-donus"; grup = "OGLE_DONUS"; od++;
                     } else {
-                        sinif = "aksam-paydos";
-                        grup = "AKSAM_PAYDOS";
-                        ap++;
+                        sinif = "aksam-paydos"; grup = "AKSAM_PAYDOS"; ap++;
                     }
                 }
 
