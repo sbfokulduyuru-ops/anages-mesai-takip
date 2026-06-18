@@ -58,7 +58,6 @@
         .btn-sifirla { background: #d32f2f; }
         .btn-sifirla:hover { background: #b71c1c; }
 
-        /* 🖨️ ULTRA TEMİZ YAZDIRMA AYARI: SADECE TABLOYU BIRAKIR moruk */
         @media print {
             body { background: white; padding: 0; margin: 0; display: block; height: auto; }
             .sol-panel, .ozet-blok, .btn-panel, .takvim-grubu, .sag-panel h2 { display: none !important; }
@@ -67,7 +66,6 @@
             table { border: 1px solid #000; width: 100% !important; }
             th { background: #800000 !important; color: white !important; border-bottom: 2px solid #000; position: static !important; }
             td { border-bottom: 1px solid #000; color: #000 !important; }
-            /* Çıktıda renkli satırlar göz yormasın, resmi evrak gibi pürüzsüz çıksın moruk */
             tr td { background-color: transparent !important; color: #000 !important; }
             .not-input { border: none !important; background: transparent !important; padding: 0 !important; width: 100% !important; }
         }
@@ -77,7 +75,7 @@
 
     <div class="sol-panel">
         <h2>SBF İDARİ PERSONEL MESAİ TAKİP</h2>
-        <div class="durum-kartı" id="status">Sistem Durumu: Bağlı 🟢</div>
+        <div class="durum-kartı" id="status">Sistem Durumu:高度 Kilitli</div>
         
         <div class="takvim-grubu">
             <label>📅 BAŞLANGIÇ TARİHİ</label>
@@ -103,7 +101,8 @@
                 <div class="ozet-kutular">
                     <div class="alan al-yeşil" onclick="filtrele('SABAH_ZAMANINDA', this)">08:30 ve Öncesi <span id="sZamanindaSay">0</span></div>
                     <div class="alan al-sarı" onclick="filtrele('SABAH_SINIRDA', this)">08:31 - 08:44 Arası <span id="sSinirdaSay">0</span></div>
-                    <div class="alan al-kırmızı" onclick="filtele('SABAH_GEC', this)">08:45 Sonrası Giriş <span id="sGecSay">0</span></div>
+                    <!-- HARF HATASI BURADA DÜZELTİLDİ MORUK (filtrele yapıldı) -->
+                    <div class="alan al-kırmızı" onclick="filtrele('SABAH_GEC', this)">08:45 Sonrası Giriş <span id="sGecSay">0</span></div>
                 </div>
                 <div class="alt-toplam-paneli toplam-sabah">
                     <div>☀️ Sabah Giriş Yapan Toplam Personel:</div>
@@ -197,7 +196,7 @@
                     credentials: 'omit'
                 });
                 data = await res.json();
-                statusCard.innerText = "Sistem Durumu: Bağlı 🟢";
+                statusCard.innerText = "Sistem Durumu:高度 Kilitli -> Bağlı 🟢";
                 statusCard.style.color = "green";
                 statusCard.style.borderLeftColor = "green";
             } catch (e) {
@@ -299,7 +298,7 @@
                             return; 
                         }
                     }
-                    sonBasilanZaman[item.tckn] = total = toplam;
+                    sonBasilanZaman[item.tckn] = toplam;
 
                     if (toplam <= (11 * 60)) {
                         if (toplam <= (8 * 60) + 30) {
