@@ -10,6 +10,9 @@
         h2 { color: #800000; margin-top: 0; border-bottom: 2px solid #800000; padding-bottom: 10px; font-size: 18px; }
         .durum-kartı { background: #eef2f7; padding: 12px; border-left: 5px solid green; border-radius: 4px; font-size: 13px; font-weight: bold; color: green; }
         
+        /* CANLI SAAT PANELİ STİLİ moruk */
+        .canli-saat-paneli { background: #fff3e0; border: 1px solid #ffe0b2; padding: 10px; border-radius: 6px; text-align: center; font-size: 14px; font-weight: bold; color: #e65100; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+
         .takvim-grubu { display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6; }
         .takvim-grubu label { font-size: 11px; font-weight: bold; color: #495057; }
         .takvim-input { width: 90%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; font-weight: bold; font-family: inherit; }
@@ -60,7 +63,7 @@
 
         @media print {
             body { background: white; padding: 0; margin: 0; display: block; height: auto; }
-            .sol-panel, .ozet-blok, .btn-panel, .takvim-grubu, .sag-panel h2 { display: none !important; }
+            .sol-panel, .ozet-blok, .btn-panel, .takvim-grubu, .sag-panel h2, .canli-saat-paneli { display: none !important; }
             .sag-panel { width: 100% !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
             .tablo-alani { overflow: visible !important; }
             table { border: 1px solid #000; width: 100% !important; }
@@ -75,7 +78,10 @@
 
     <div class="sol-panel">
         <h2>SBF İDARİ PERSONEL MESAİ TAKİP</h2>
-        <div class="durum-kartı" id="status">Sistem Durumu:高度 Kilitli</div>
+        <div class="durum-kartı" id="status">Sistem Durumu: Bağlı 🟢</div>
+        
+        <!-- ⏰ YENİ CANLI SAAT VE GÜN ALANI moruk -->
+        <div class="canli-saat-paneli" id="canliZamanAyraci">Yükleniyor...</div>
         
         <div class="takvim-grubu">
             <label>📅 BAŞLANGIÇ TARİHİ</label>
@@ -101,7 +107,6 @@
                 <div class="ozet-kutular">
                     <div class="alan al-yeşil" onclick="filtrele('SABAH_ZAMANINDA', this)">08:30 ve Öncesi <span id="sZamanindaSay">0</span></div>
                     <div class="alan al-sarı" onclick="filtrele('SABAH_SINIRDA', this)">08:31 - 08:44 Arası <span id="sSinirdaSay">0</span></div>
-                    <!-- HARF HATASI BURADA DÜZELTİLDİ MORUK (filtrele yapıldı) -->
                     <div class="alan al-kırmızı" onclick="filtrele('SABAH_GEC', this)">08:45 Sonrası Giriş <span id="sGecSay">0</span></div>
                 </div>
                 <div class="alt-toplam-paneli toplam-sabah">
@@ -150,11 +155,32 @@
         let yazmaModuAktif = false;
         let yazilanNotlar = JSON.parse(localStorage.getItem("anages_idari_notlar")) || {};
 
+        // ⏰ CANLI SAAT VE GÜN GÜNCELLEME MOTORU moruk
+        function zamaniCanliGuncelle() {
+            const gunler = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+            const simdi = new Date();
+            
+            const gun = String(simdi.getDate()).padStart(2, '0');
+            const ay = String(simdi.getMonth() + 1).padStart(2, '0');
+            const yil = simdi.getFullYear();
+            const gunAdi = gunler[simdi.getDay()];
+            
+            const saat = String(simdi.getHours()).padStart(2, '0');
+            const dakika = String(simdi.getMinutes()).padStart(2, '0');
+            const saniye = String(simdi.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('canliZamanAyraci').innerText = `${gun}.${ay}.${yil}  ${gunAdi}  ${saat}.${dakika}.${saniye}`;
+        }
+
         window.onload = function() {
             const bugün = new Date().toISOString().split('T')[0];
             document.getElementById('basTarih').value = bugün;
             document.getElementById('bitTarih').value = bugün;
             verileriEkranaBas();
+            
+            // Saati milisaniyelik hassasiyetle başlatıp saniyede bir döndürüyoruz moruk
+            zamaniCanliGuncelle();
+            setInterval(zamaniCanliGuncelle, 1000);
         };
 
         function filtrele(tip, element) {
@@ -196,7 +222,7 @@
                     credentials: 'omit'
                 });
                 data = await res.json();
-                statusCard.innerText = "Sistem Durumu:高度 Kilitli -> Bağlı 🟢";
+                statusCard.innerText = "Sistem Durumu: Bağlı 🟢";
                 statusCard.style.color = "green";
                 statusCard.style.borderLeftColor = "green";
             } catch (e) {
